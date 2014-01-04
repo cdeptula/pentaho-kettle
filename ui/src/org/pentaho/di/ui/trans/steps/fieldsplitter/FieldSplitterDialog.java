@@ -71,10 +71,14 @@ public class FieldSplitterDialog extends BaseStepDialog implements StepDialogInt
 
   private TextVar wEnclosure;
 
+  private Label wlKeepInputField;
+  private Button wKeepInputField;
+  private FormData fdlKeepInputField, fdKeepInputField;
+  
   private Label wlFields;
   private TableView wFields;
   private FormData fdlFields, fdFields;
-
+  
   private FieldSplitterMeta input;
 
   private boolean gotPreviousFields = false;
@@ -197,13 +201,39 @@ public class FieldSplitterDialog extends BaseStepDialog implements StepDialogInt
     fdEnclosure.left = new FormAttachment( middle, 0 );
     fdEnclosure.right = new FormAttachment( 100, 0 );
     wEnclosure.setLayoutData( fdEnclosure );
+    
+    // Keep Input Field
+    wlKeepInputField = new Label(shell, SWT.RIGHT);
+	wlKeepInputField.setText( BaseMessages.getString( PKG, "FieldSplitterDialog.PreserveInput.Label" ) );
+	props.setLook( wlKeepInputField );
+	fdlKeepInputField = new FormData();
+	fdlKeepInputField.left = new FormAttachment( 0, 0 );
+	fdlKeepInputField.top  = new FormAttachment( wEnclosure, margin );
+	fdlKeepInputField.right= new FormAttachment( middle, -margin );
+	wlKeepInputField.setLayoutData( fdlKeepInputField );
+	wKeepInputField = new Button( shell, SWT.CHECK );
+	wKeepInputField.setToolTipText(BaseMessages.getString( PKG, "FieldSplitterDialog.PreserveInput.Tooltip" ) );
+	props.setLook( wKeepInputField );
+	fdKeepInputField = new FormData();
+	fdKeepInputField.left = new FormAttachment( middle, 0 );
+	fdKeepInputField.top  = new FormAttachment( wEnclosure, margin );
+	fdKeepInputField.right= new FormAttachment( 100, 0 );
+	wKeepInputField.setLayoutData( fdKeepInputField );
+	wKeepInputField.addSelectionListener( new SelectionAdapter() 
+		{
+			public void widgetSelected( SelectionEvent e ) 
+			{
+				input.setChanged();
+			}
+		}
+	);
 
     wlFields = new Label( shell, SWT.RIGHT );
     wlFields.setText( BaseMessages.getString( PKG, "FieldSplitterDialog.Fields.Label" ) );
     props.setLook( wlFields );
     fdlFields = new FormData();
     fdlFields.left = new FormAttachment( 0, 0 );
-    fdlFields.top = new FormAttachment( wEnclosure, margin );
+    fdlFields.top = new FormAttachment( wKeepInputField, margin );
     wlFields.setLayoutData( fdlFields );
 
     wOK = new Button( shell, SWT.PUSH );
@@ -342,6 +372,7 @@ public class FieldSplitterDialog extends BaseStepDialog implements StepDialogInt
     if ( input.getEnclosure() != null ) {
       wEnclosure.setText( input.getEnclosure() );
     }
+    wKeepInputField.setSelection( input.getKeepInputField() );
 
     for ( int i = 0; i < input.getFieldName().length; i++ ) {
       final TableItem ti = wFields.table.getItem( i );
@@ -402,6 +433,7 @@ public class FieldSplitterDialog extends BaseStepDialog implements StepDialogInt
     input.setSplitField( wSplitfield.getText() );
     input.setDelimiter( wDelimiter.getText() );
     input.setEnclosure( wEnclosure.getText() );
+    input.setKeepInputField( wKeepInputField.getSelection() );
 
     // Table table = wFields.table;
     int nrfields = wFields.nrNonEmpty();

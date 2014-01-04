@@ -112,6 +112,9 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
 
   /** Ignore delimiter inside pairs of the enclosure string */
   private String enclosure;
+  
+  /** Keep input field */
+  private boolean keepInputField;
 
   /** new field names */
   private String[] fieldName;
@@ -178,6 +181,15 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
 
   public void setEnclosure( final String enclosure ) {
     this.enclosure = enclosure;
+  }
+  
+  public boolean getKeepInputField() {
+	  return keepInputField;
+  }
+  
+  public void setKeepInputField( final boolean keepInputField )
+  {
+	  this.keepInputField=keepInputField;
   }
 
   public String[] getFieldName() {
@@ -336,6 +348,7 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
       splitField = XMLHandler.getTagValue( stepnode, "splitfield" );
       delimiter = XMLHandler.getTagValue( stepnode, "delimiter" );
       enclosure = XMLHandler.getTagValue( stepnode, "enclosure" );
+      keepInputField="Y".equalsIgnoreCase( XMLHandler.getTagValue( stepnode, "keepinputfield" ) );
 
       final Node fields = XMLHandler.getSubNode( stepnode, "fields" );
       final int nrfields = XMLHandler.countNodes( fields, "field" );
@@ -375,6 +388,7 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
     splitField = "";
     delimiter = ",";
     enclosure = null;
+    keepInputField = false;
     allocate( 0 );
   }
 
@@ -386,7 +400,13 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
       throw new RuntimeException( BaseMessages.getString(
         PKG, "FieldSplitter.Log.CouldNotFindFieldToSplit", splitField ) );
     }
-
+    
+    int idxIncr=0;
+    if ( keepInputField )
+    {
+    	idxIncr=1;
+    }
+        
     // Add the new fields at the place of the index --> replace!
     for ( int i = 0; i < fieldName.length; i++ ) {
       try {
@@ -402,15 +422,12 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
         // v.setDateFormatLenient(dateFormatLenient);
         // TODO when implemented in UI
         // v.setDateFormatLocale(dateFormatLocale);
-        if ( i == 0 && idx >= 0 ) {
+        if ( i == 0 && idx >= 0 && ! keepInputField ) {
           // the first valueMeta (splitField) will be replaced
-          r.setValueMeta( idx, v );
+          r.setValueMeta( idx + idxIncr, v );
         } else {
           // other valueMeta will be added
-          if ( idx >= r.size() ) {
-            r.addValueMeta( v );
-          }
-          r.addValueMeta( idx + i, v );
+          r.addValueMeta( idx + i + idxIncr, v );
         }
       } catch ( Exception e ) {
         throw new KettleStepException( e );
@@ -424,6 +441,7 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
     retval.append( "   " ).append( XMLHandler.addTagValue( "splitfield", splitField ) );
     retval.append( "   " ).append( XMLHandler.addTagValue( "delimiter", delimiter ) );
     retval.append( "   " ).append( XMLHandler.addTagValue( "enclosure", enclosure ) );
+    retval.append( "   " ).append( XMLHandler.addTagValue( "keepinputfield", keepInputField ) );
 
     retval.append( "    <fields>" );
     for ( int i = 0; i < fieldName.length; i++ ) {
@@ -454,6 +472,7 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
       splitField = rep.getStepAttributeString( id_step, "splitfield" );
       delimiter = rep.getStepAttributeString( id_step, "delimiter" );
       enclosure = rep.getStepAttributeString( id_step, "enclosure" );
+      keepInputField = rep.getStepAttributeBoolean( id_step, "keepinputfield" );
 
       int nrfields = rep.countNrStepAttributes( id_step, "field_name" );
 
@@ -486,6 +505,7 @@ public class FieldSplitterMeta extends BaseStepMeta implements StepMetaInterface
       rep.saveStepAttribute( id_transformation, id_step, "splitfield", splitField );
       rep.saveStepAttribute( id_transformation, id_step, "delimiter", delimiter );
       rep.saveStepAttribute( id_transformation, id_step, "enclosure", enclosure );
+      rep.saveStepAttribute( id_transformation, id_step, "keepinputfield", keepInputField );
 
       for ( int i = 0; i < fieldName.length; i++ ) {
         rep.saveStepAttribute( id_transformation, id_step, i, "field_name", fieldName[i] );

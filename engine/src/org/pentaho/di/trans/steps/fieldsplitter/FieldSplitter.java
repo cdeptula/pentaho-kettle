@@ -67,7 +67,7 @@ public class FieldSplitter extends BaseStep implements StepInterface {
         throw new KettleValueException( BaseMessages.getString(
           PKG, "FieldSplitter.Log.CouldNotFindFieldToSplit", meta.getSplitField() ) );
       }
-
+      
       // only String type allowed
       if ( !data.previousMeta.getValueMeta( data.fieldnr ).isString() ) {
         throw new KettleValueException( ( BaseMessages.getString(
@@ -92,10 +92,19 @@ public class FieldSplitter extends BaseStep implements StepInterface {
     // reserve room
     Object[] outputRow = RowDataUtil.allocateRowData( data.outputMeta.size() );
 
-    int nrExtraFields = meta.getFieldID().length - 1;
+    int nrExtraFields = meta.getFieldID().length;
+    
+    if ( ! meta.getKeepInputField() )
+    {
+    	nrExtraFields--;
+    }
 
     for ( int i = 0; i < data.fieldnr; i++ ) {
       outputRow[i] = r[i];
+    }
+    if ( meta.getKeepInputField() )
+    {
+    	outputRow[data.fieldnr]=r[data.fieldnr];
     }
     for ( int i = data.fieldnr + 1; i < data.previousMeta.size(); i++ ) {
       outputRow[i + nrExtraFields] = r[i];
@@ -119,6 +128,11 @@ public class FieldSplitter extends BaseStep implements StepInterface {
     Object value = null;
     String[] splits = Const.splitString( v, data.delimiter, data.enclosure );
     int prev = 0;
+    int idxIncr = 0;
+    if ( meta.getKeepInputField() )
+    {
+    	idxIncr = 1;
+    }
     for ( int i = 0; i < meta.getFieldName().length; i++ ) {
       String split = ( splits == null || i >= splits.length ) ? null : splits[i];
       if ( use_ids ) {
@@ -154,7 +168,7 @@ public class FieldSplitter extends BaseStep implements StepInterface {
         throw new KettleValueException( BaseMessages.getString(
           PKG, "FieldSplitter.Log.ErrorConvertingSplitValue", split, meta.getSplitField() + "]!" ), e );
       }
-      outputRow[data.fieldnr + i] = value;
+      outputRow[data.fieldnr + idxIncr + i] = value;
     }
 
     return outputRow;
